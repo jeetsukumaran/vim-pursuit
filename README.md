@@ -113,8 +113,8 @@ nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
 
 ### Setup Commands
 
-| Command                | Action                            |
-|------------------------|-----------------------------------|
+| Command                 | Action                            |
+|-------------------------|-----------------------------------|
 | `:PursuitEnable`        | Setup conceal syntax and key maps |
 | `:PursuitEnableKeymaps` | Setup key maps                    |
 | `:PursuitEnableSyntax`  | Setup syntax                      |
