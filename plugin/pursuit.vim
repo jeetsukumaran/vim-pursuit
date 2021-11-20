@@ -443,10 +443,10 @@ command! PursuitFindLinkNext :call s:_pursuit_find_next_link()
 command! PursuitFindLinkPrev :call s:_pursuit_find_prev_link()
 
 " Setup Commands
-command! -bang PursuitApply :call s:_pursuit_apply(<bang>0)
-command! -bang PursuitApplyKeymaps :call s:_pursuit_apply_keymaps(<bang>0)
-command! PursuitApplySyntax :call s:_pursuit_apply_syntax(1)
-command! PursuitUnapplySyntax :call s:_pursuit_apply_syntax(0)
+command! -bang PursuitEnable :call s:_pursuit_apply(<bang>0)
+command! -bang PursuitEnableKeymaps :call s:_pursuit_apply_keymaps(<bang>0)
+command! PursuitEnableSyntax :call s:_pursuit_apply_syntax(1)
+command! PursuitDisableSyntax :call s:_pursuit_apply_syntax(0)
 
 " }}}1
 
@@ -467,7 +467,7 @@ nnoremap <Plug>(PursuitFindLinkPrev) :PursuitFindLinkPrev<CR>
 " Autostart {{{1
 augroup pursuit
     autocmd!
-    autocmd BufNewFile,BufFilePre,BufRead *.txt,*.txt,*.md,*.markdown :PursuitApply
+    autocmd BufNewFile,BufFilePre,BufRead *.txt,*.txt,*.md,*.markdown :PursuitEnable
 augroup END
 " }}}1
 

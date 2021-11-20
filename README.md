@@ -88,16 +88,20 @@ pop back using "`g<BS>`".
 By default, these internal mappings will be bound to keys as show below.
 
 
-| Command                  | Action                                                                    | Internal Key Map                | Default Binding |
-|--------------------------|---------------------------------------------------------------------------|---------------------------------|-----------------|
-| `:PursuitFollowLink`     | Open link under cursor; if opened in Vim, push current position to stack. | `<Plug>(PursuitFollowLink)`     | ``<g><CR>``     |
-| `:PursuitReturnFromLink` | Pop previous link position from stack                                     | `<Plug>(PursuitReturnFromLink)` | ``<g><BS>``     |
-| `:PursuitFindLinkNext`   | Search forward in current buffer for link                                 | `<Plug>(PursuitFindLinkNext)`   | ``z]``          |
-| `:PursuitFindLinkPrev`   | Search bacward in current buffer for link                                 | `<Plug>(PursuitFindLinkPrev)`   | ``z[``          |
+| Command                             | Action                                                                    | Internal Key Map                          | Default Binding |
+|-------------------------------------|---------------------------------------------------------------------------|-------------------------------------------|-----------------|
+| `:PursuitFollowLink`                | Open link under cursor; if opened in Vim, push current position to stack. | `<Plug>(PursuitFollowLink)`               | ``<g><CR>``     |
+| `:PursuitFollowLink vertical`       | As above, but link is opened in vertical split.                           | `<Plug>(PursuitFollowLinkVertical)`       | ``<g><M-CR>``   |
+| `:PursuitFollowLink horizontal`     | As above, but link is opened in vertical split.                           | `<Plug>(PursuitFollowLinkHorizontal)`     | ``<g><S-CR>``   |
+| `:PursuitReturnFromLink`            | Pop previous link position from stack                                     | `<Plug>(PursuitReturnFromLink)`           | ``<g><BS>``     |
+| `:PursuitReturnFromLink vertical`   | As above, but link is restore in vertical split.                          | `<Plug>(PursuitReturnFromLinkVertical)`   | ``<g><M-BS>``   |
+| `:PursuitReturnFromLink horizontal` | As above, but link is restore in vertical split.                          | `<Plug>(PursuitReturnFromLinkHorizontal)` | ``<g><S-BS>``   |
+| `:PursuitFindLinkNext`              | Search forward in current buffer for link                                 | `<Plug>(PursuitFindLinkNext)`             | ``z]``          |
+| `:PursuitFindLinkPrev`              | Search bacward in current buffer for link                                 | `<Plug>(PursuitFindLinkPrev)`             | ``z[``          |
 
 If you defined "``g:pursuit_default_key_maps``" to be 0 in your configuration file, then the above commands will not be bound to any keys.
 You can then add custom bindings yourself in your configuration file.
-For e.g., the following replicates the default bindings:
+For e.g., the following replicates some of the default bindings:
 
 ```
 let g:pursuit_default_key_maps = 0
@@ -111,9 +115,9 @@ nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
 
 | Command                | Action                            |
 |------------------------|-----------------------------------|
-| `:PursuitApply`        | Setup conceal syntax and key maps |
-| `:PursuitApplyKeymaps` | Setup key maps                    |
-| `:PursuitApplySyntax`  | Setup syntax                      |
+| `:PursuitEnable`        | Setup conceal syntax and key maps |
+| `:PursuitEnableKeymaps` | Setup key maps                    |
+| `:PursuitEnableSyntax`  | Setup syntax                      |
 
 ## Options
 
