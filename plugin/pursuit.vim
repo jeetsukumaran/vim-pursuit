@@ -49,10 +49,14 @@ let s:pursuit_default_external_handling_filepath_patterns = [
             \   "*.png",
             \ ]
 let g:pursuit_external_handling_filepath_patterns = get(g:, "pursuit_external_handling_filepath_patterns", s:pursuit_default_external_handling_filepath_patterns)
+let g:pursuit_default_vim_split_policy = get(g:, "pursuit_default_vim_split_policy", "vertical")
+
 " }}}1
 
 " Functions {{{1
-python3 <<EOF
+
+python3 << EOF
+
 import collections
 import json
 import os.path
@@ -115,18 +119,20 @@ class Pursuit(object):
         else:
             self._info("Link stack is empty")
 
-    def follow_link(self):
+    def follow_link(self, vim_split_policy=None):
         row, col = vim.current.window.cursor
         cursor = (row - 1, col)
         lines = vim.current.buffer
         self.link_stack.push(vim.current.window.buffer.number, row, col)
         target = self.parse_link(cursor, lines)
         try:
-            self.process_link(target, current_file=vim.eval("expand('%:p')"),)
+            self.process_link(target,
+                current_file=vim.eval("expand('%:p')"),
+                vim_split_policy=vim_split_policy)
         except LinkStackNoSaveException:
             self.link_stack.pop()
 
-    def process_link(self, target, current_file):
+    def process_link(self, target, current_file, vim_split_policy):
         """
         :returns: a callable that encapsulates the action to perform
         """
@@ -148,7 +154,7 @@ class Pursuit(object):
                 target = target[len('|filename|'):]
             if target.startswith('{filename}'):
                 target = target[len('{filename}'):]
-            return self.vim_open(self.anchor_path(target, current_file))
+            return self.vim_open(self.anchor_path(target, current_file), vim_split_policy)
 
     def is_matches_external_open_pattern(self, path):
         for pattern in self.external_handling_patterns:
@@ -210,9 +216,21 @@ class Pursuit(object):
         else:
             os.startfile(target)
 
-    def vim_open(self, target):
+    def vim_open(self, target, vim_split_policy):
         path, anchor, line_nr = self.parse_link_spec(target)
-        vim.command('e {}'.format(path.replace(' ', '\\ ')))
+        path = path.replace(' ', '\\ ')
+        if vim_split_policy is None:
+            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+        vim_cmd = []
+        if vim_split_policy == "vertical":
+            vim_cmd = "vsp"
+        elif vim_split_policy == "horizontal":
+            vim_cmd = "sp"
+        elif vim_split_policy == "none":
+            vim_cmd = "e"
+        else:
+            raise ValueError(vim_split_policy)
+        vim.command('{} {}'.format(vim_cmd, path))
         if anchor is not None:
             self.jump_to_anchor(anchor)
         elif line_nr is not None:
