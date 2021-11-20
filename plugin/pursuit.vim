@@ -53,7 +53,7 @@ let g:pursuit_default_vim_split_policy = get(g:, "pursuit_default_vim_split_poli
 
 " }}}1
 
-" Functions {{{1
+" Pursuit Engine {{{1
 
 python3 << EOF
 
@@ -365,12 +365,13 @@ EOF
 " Functions {{{1
 " ============================================================================
 
+let s:link_pattern = '\(\[.\{-}\](.\{-})\|\[.\{-}\]\[.\{-}\]\)'
 function! s:_pursuit_find_next_link()
-    call search('\[.\{-}\](.\{-})', 'w')
+    call search(s:link_pattern, 'w')
 endfunction
 
 function! s:_pursuit_find_prev_link()
-    call search('\[.\{-}\](.\{-})', 'bw')
+    call search(s:link_pattern, 'bw')
 endfunction
 
 function! s:_pursuit_apply_syntax(on)
