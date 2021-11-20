@@ -117,16 +117,17 @@ class Pursuit(object):
             return
         if vim_split_policy is None:
             vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
-        vim_cmd = []
         if vim_split_policy == "vertical":
-            vim_cmd = "vert sb"
+            vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
-            vim_cmd = "sb"
+            vim_cmd = ":sb"
         elif vim_split_policy == "none":
-            vim_cmd = "b"
+            vim_cmd = None
         else:
             raise ValueError(vim_split_policy)
-        vim.command("{} {}".format(vim_cmd, bufn))
+        print(vim_cmd)
+        if vim_cmd:
+            vim.command(vim_cmd)
         vim.command("call setpos('.', [{}, {}, {}, {}])".format(bufn, row, col+1, 0))
 
     def follow_link(self, vim_split_policy=None):
@@ -414,12 +415,15 @@ function! s:_pursuit_apply_keymaps(bang)
         nmap <silent> g<CR>   <Plug>(PursuitFollowLink)
         nmap <silent> g<A-CR> <Plug>(PursuitFollowLinkSplitVertical)
         nmap <silent> g<S-CR> <Plug>(PursuitFollowLinkSplitHorizontal)
-        nmap <silent> <F1> <Plug>(PursuitFollowLinkSplitVertical)
-        nmap <silent> <F2> <Plug>(PursuitFollowLinkSplitHorizontal)
-        nmap <silent> <F3> <Plug>(PursuitFollowLinkSplitNone)
         nmap <silent> g<BS>    <Plug>(PursuitReturnFromLink)
+        nmap <silent> g<A-BS> <Plug>(PursuitReturnFromLinkSplitVertical)
+        nmap <silent> g<S-BS> <Plug>(PursuitReturnFromLinkSplitHorizontal)
         nmap <silent> z]      <Plug>(PursuitFindLinkNext)
         nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
+
+        nmap <silent> <F1> <Plug>(PursuitReturnFromLinkSplitVertical)
+        nmap <silent> <F2> <Plug>(PursuitReturnFromLinkSplitHorizontal)
+        nmap <silent> <F3> <Plug>(PursuitReturnFromLinkSplitNone)
 
         let g:pursuit_keymaps_applied = 1
     endif
@@ -458,6 +462,9 @@ nnoremap <Plug>(PursuitFollowLinkSplitVertical) :PursuitFollowLink vertical<CR>
 nnoremap <Plug>(PursuitFollowLinkSplitHorizontal) :PursuitFollowLink horizontal<CR>
 nnoremap <Plug>(PursuitFollowLinkSplitNone) :PursuitFollowLink none<CR>
 nnoremap <Plug>(PursuitReturnFromLink) :PursuitReturnFromLink<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitVertical) :PursuitReturnFromLink vertical<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitHorizontal) :PursuitReturnFromLink horizontal<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitNone) :PursuitReturnFromLink none<CR>
 nnoremap <Plug>(PursuitFindLinkNext) :PursuitFindLinkNext<CR>
 nnoremap <Plug>(PursuitFindLinkPrev) :PursuitFindLinkPrev<CR>
 " }}}1
