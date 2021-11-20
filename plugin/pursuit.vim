@@ -420,14 +420,6 @@ function! s:_pursuit_apply_keymaps(bang)
         nmap <silent> g<S-BS> <Plug>(PursuitReturnFromLinkSplitHorizontal)
         nmap <silent> z]      <Plug>(PursuitFindLinkNext)
         nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
-
-        nmap <silent> <F1> <Plug>(PursuitFollowLinkSplitVertical)
-        nmap <silent> <F2> <Plug>(PursuitFollowLinkSplitHorizontal)
-        nmap <silent> <F3> <Plug>(PursuitFollowLinkSplitNone)
-        nmap <silent> <F4> <Plug>(PursuitReturnFromLinkSplitVertical)
-        nmap <silent> <F5> <Plug>(PursuitReturnFromLinkSplitHorizontal)
-        nmap <silent> <F6> <Plug>(PursuitReturnFromLinkSplitNone)
-
         let g:pursuit_keymaps_applied = 1
     endif
 endfunction
