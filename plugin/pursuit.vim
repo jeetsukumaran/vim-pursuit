@@ -411,8 +411,8 @@ endfunction
 " ============================================================================
 
 " Core Commands
-command! PursuitFollowLink :python3 pursuit.follow_link()
-command! PursuitReturnFromLink :python3 pursuit.pop_link()
+command! -nargs=? PursuitFollowLink :python3 pursuit.follow_link(<f-args>)
+command! -nargs=? PursuitReturnFromLink :python3 pursuit.pop_link(<f-args>)
 command! PursuitFindLinkNext :call s:_pursuit_find_next_link()
 command! PursuitFindLinkPrev :call s:_pursuit_find_prev_link()
 
