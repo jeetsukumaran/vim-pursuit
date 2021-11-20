@@ -49,10 +49,14 @@ let s:pursuit_default_external_handling_filepath_patterns = [
             \   "*.png",
             \ ]
 let g:pursuit_external_handling_filepath_patterns = get(g:, "pursuit_external_handling_filepath_patterns", s:pursuit_default_external_handling_filepath_patterns)
+let g:pursuit_default_vim_split_policy = get(g:, "pursuit_default_vim_split_policy", "none")
+
 " }}}1
 
 " Functions {{{1
-python3 <<EOF
+
+python3 << EOF
+
 import collections
 import json
 import os.path
@@ -106,27 +110,40 @@ class Pursuit(object):
         else:
             self.link_stack = link_stack
 
-    def pop_link(self):
+    def pop_link(self, vim_split_policy=None):
         bufn, row, col = self.link_stack.pop()
-        if bufn is not None:
-            vim.command("b {}".format(bufn))
-            vim.command("call setpos('.', [{}, {}, {}, {}])".format(bufn, row, col+1, 0))
-            # vim.cursor = (row, col)
-        else:
+        if bufn is None:
             self._info("Link stack is empty")
+            return
+        if vim_split_policy is None:
+            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+        if vim_split_policy == "vertical":
+            vim_cmd = ":vert sb"
+        elif vim_split_policy == "horizontal":
+            vim_cmd = ":sb"
+        elif vim_split_policy == "none":
+            vim_cmd = None
+        else:
+            raise ValueError(vim_split_policy)
+        print(vim_cmd)
+        if vim_cmd:
+            vim.command(vim_cmd)
+        vim.command("call setpos('.', [{}, {}, {}, {}])".format(bufn, row, col+1, 0))
 
-    def follow_link(self):
+    def follow_link(self, vim_split_policy=None):
         row, col = vim.current.window.cursor
         cursor = (row - 1, col)
         lines = vim.current.buffer
         self.link_stack.push(vim.current.window.buffer.number, row, col)
         target = self.parse_link(cursor, lines)
         try:
-            self.process_link(target, current_file=vim.eval("expand('%:p')"),)
+            self.process_link(target,
+                current_file=vim.eval("expand('%:p')"),
+                vim_split_policy=vim_split_policy)
         except LinkStackNoSaveException:
             self.link_stack.pop()
 
-    def process_link(self, target, current_file):
+    def process_link(self, target, current_file, vim_split_policy):
         """
         :returns: a callable that encapsulates the action to perform
         """
@@ -136,7 +153,7 @@ class Pursuit(object):
             self._info("Not on a recognized link")
             raise LinkStackNoSaveException()
         elif target.startswith('#'):
-            self.jump_to_anchor(target)
+            self.jump_to_anchor(target, vim_split_policy=vim_split_policy)
         elif self.has_scheme(target):
             self.browser_open(target)
             raise LinkStackNoSaveException()
@@ -148,7 +165,7 @@ class Pursuit(object):
                 target = target[len('|filename|'):]
             if target.startswith('{filename}'):
                 target = target[len('{filename}'):]
-            return self.vim_open(self.anchor_path(target, current_file))
+            return self.vim_open(self.anchor_path(target, current_file), vim_split_policy)
 
     def is_matches_external_open_pattern(self, path):
         for pattern in self.external_handling_patterns:
@@ -163,7 +180,7 @@ class Pursuit(object):
     def has_scheme(self, target):
         return bool(urlparse(target).scheme)
 
-    def jump_to_anchor(self, target):
+    def jump_to_anchor(self, target, vim_split_policy):
         if target.startswith("#"):
             target = target[1:]
         title_identifier = target.lower()
@@ -197,6 +214,18 @@ class Pursuit(object):
         if line_idx is None:
             self._error("Anchor not found: {}".format(target))
             raise LinkStackNoSaveException()
+        if vim_split_policy is None:
+            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+        if vim_split_policy == "vertical":
+            vim_cmd = ":vert sb"
+        elif vim_split_policy == "horizontal":
+            vim_cmd = ":sb"
+        elif vim_split_policy == "none":
+            vim_cmd = None
+        else:
+            raise ValueError(vim_split_policy)
+        if vim_cmd:
+            vim.command(vim_cmd)
         vim.command("execute 'normal! {}G{}|'".format(line_idx+1, col_idx))
 
     def browser_open(self, target):
@@ -210,9 +239,21 @@ class Pursuit(object):
         else:
             os.startfile(target)
 
-    def vim_open(self, target):
+    def vim_open(self, target, vim_split_policy):
         path, anchor, line_nr = self.parse_link_spec(target)
-        vim.command('e {}'.format(path.replace(' ', '\\ ')))
+        path = path.replace(' ', '\\ ')
+        if vim_split_policy is None:
+            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+        vim_cmd = []
+        if vim_split_policy == "vertical":
+            vim_cmd = "vsp"
+        elif vim_split_policy == "horizontal":
+            vim_cmd = "sp"
+        elif vim_split_policy == "none":
+            vim_cmd = "e"
+        else:
+            raise ValueError(vim_split_policy)
+        vim.command('{} {}'.format(vim_cmd, path))
         if anchor is not None:
             self.jump_to_anchor(anchor)
         elif line_nr is not None:
@@ -372,8 +413,11 @@ endfunction
 function! s:_pursuit_apply_keymaps(bang)
     if a:bang || !get(g:, "pursuit_keymaps_applied", 0)
         nmap <silent> g<CR>   <Plug>(PursuitFollowLink)
-        " nnoremap <silent> <C-[> <C-o>
+        nmap <silent> g<A-CR> <Plug>(PursuitFollowLinkSplitVertical)
+        nmap <silent> g<S-CR> <Plug>(PursuitFollowLinkSplitHorizontal)
         nmap <silent> g<BS>    <Plug>(PursuitReturnFromLink)
+        nmap <silent> g<A-BS> <Plug>(PursuitReturnFromLinkSplitVertical)
+        nmap <silent> g<S-BS> <Plug>(PursuitReturnFromLinkSplitHorizontal)
         nmap <silent> z]      <Plug>(PursuitFindLinkNext)
         nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
         let g:pursuit_keymaps_applied = 1
@@ -393,8 +437,8 @@ endfunction
 " ============================================================================
 
 " Core Commands
-command! PursuitFollowLink :python3 pursuit.follow_link()
-command! PursuitReturnFromLink :python3 pursuit.pop_link()
+command! -nargs=? PursuitFollowLink :python3 pursuit.follow_link(<f-args>)
+command! -nargs=? PursuitReturnFromLink :python3 pursuit.pop_link(<f-args>)
 command! PursuitFindLinkNext :call s:_pursuit_find_next_link()
 command! PursuitFindLinkPrev :call s:_pursuit_find_prev_link()
 
@@ -409,7 +453,13 @@ command! PursuitUnapplySyntax :call s:_pursuit_apply_syntax(0)
 " Key Mappings {{{1
 " ============================================================================
 nnoremap <Plug>(PursuitFollowLink) :PursuitFollowLink<CR>
+nnoremap <Plug>(PursuitFollowLinkSplitVertical) :PursuitFollowLink vertical<CR>
+nnoremap <Plug>(PursuitFollowLinkSplitHorizontal) :PursuitFollowLink horizontal<CR>
+nnoremap <Plug>(PursuitFollowLinkSplitNone) :PursuitFollowLink none<CR>
 nnoremap <Plug>(PursuitReturnFromLink) :PursuitReturnFromLink<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitVertical) :PursuitReturnFromLink vertical<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitHorizontal) :PursuitReturnFromLink horizontal<CR>
+nnoremap <Plug>(PursuitReturnFromLinkSplitNone) :PursuitReturnFromLink none<CR>
 nnoremap <Plug>(PursuitFindLinkNext) :PursuitFindLinkNext<CR>
 nnoremap <Plug>(PursuitFindLinkPrev) :PursuitFindLinkPrev<CR>
 " }}}1
