@@ -152,7 +152,7 @@ class Pursuit(object):
             self._info("Not on a recognized link")
             raise LinkStackNoSaveException()
         elif target.startswith('#'):
-            self.jump_to_anchor(target)
+            self.jump_to_anchor(target, vim_split_policy=vim_split_policy)
         elif self.has_scheme(target):
             self.browser_open(target)
             raise LinkStackNoSaveException()
@@ -179,7 +179,7 @@ class Pursuit(object):
     def has_scheme(self, target):
         return bool(urlparse(target).scheme)
 
-    def jump_to_anchor(self, target):
+    def jump_to_anchor(self, target, vim_split_policy):
         if target.startswith("#"):
             target = target[1:]
         title_identifier = target.lower()
@@ -213,16 +213,19 @@ class Pursuit(object):
         if line_idx is None:
             self._error("Anchor not found: {}".format(target))
             raise LinkStackNoSaveException()
+        if vim_split_policy is None:
+            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
         if vim_split_policy == "vertical":
-            vim_cmd = "vsp"
+            vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
-            vim_cmd = "sp"
+            vim_cmd = ":sb"
         elif vim_split_policy == "none":
-            vim_cmd = ""
+            vim_cmd = None
         else:
             raise ValueError(vim_split_policy)
-        # vim.command('{} {}'.format(vim_cmd, path))
-        vim.command("{} execute 'normal! {}G{}|'".format(vim_cmd, line_idx+1, col_idx))
+        if vim_cmd:
+            vim.command(vim_cmd)
+        vim.command("execute 'normal! {}G{}|'".format(line_idx+1, col_idx))
 
     def browser_open(self, target):
         webbrowser.open_new_tab(target)
@@ -411,7 +414,9 @@ function! s:_pursuit_apply_keymaps(bang)
         nmap <silent> g<CR>   <Plug>(PursuitFollowLink)
         nmap <silent> g<A-CR> <Plug>(PursuitFollowLinkSplitVertical)
         nmap <silent> g<S-CR> <Plug>(PursuitFollowLinkSplitHorizontal)
-        " nnoremap <silent> <C-[> <C-o>
+        nmap <silent> <F1> <Plug>(PursuitFollowLinkSplitVertical)
+        nmap <silent> <F2> <Plug>(PursuitFollowLinkSplitHorizontal)
+        nmap <silent> <F3> <Plug>(PursuitFollowLinkSplitNone)
         nmap <silent> g<BS>    <Plug>(PursuitReturnFromLink)
         nmap <silent> z]      <Plug>(PursuitFindLinkNext)
         nmap <silent> z[      <Plug>(PursuitFindLinkPrev)
