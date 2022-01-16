@@ -50,10 +50,13 @@ let s:pursuit_default_external_handling_filepath_patterns = [
             \ ]
 let g:pursuit_external_handling_filepath_patterns = get(g:, "pursuit_external_handling_filepath_patterns", s:pursuit_default_external_handling_filepath_patterns)
 let g:pursuit_default_vim_split_policy = get(g:, "pursuit_default_vim_split_policy", "none")
+let s:is_pursuit_engine_loaded = 0
 
 " }}}1
 
 " Pursuit Engine {{{1
+
+function! PursuitLoad()
 
 python3 << EOF
 
@@ -116,7 +119,7 @@ class Pursuit(object):
             self._info("Link stack is empty")
             return
         if vim_split_policy is None:
-            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
         if vim_split_policy == "vertical":
             vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
@@ -215,7 +218,7 @@ class Pursuit(object):
             self._error("Anchor not found: {}".format(target))
             raise LinkStackNoSaveException()
         if vim_split_policy is None:
-            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
         if vim_split_policy == "vertical":
             vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
@@ -243,7 +246,7 @@ class Pursuit(object):
         path, anchor, line_nr = self.parse_link_spec(target)
         path = path.replace(' ', '\\ ')
         if vim_split_policy is None:
-            vim_split_policy = vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
         vim_cmd = []
         if vim_split_policy == "vertical":
             vim_cmd = "vsp"
@@ -360,6 +363,10 @@ class Pursuit(object):
 pursuit = Pursuit()
 
 EOF
+let s:is_pursuit_engine_loaded = 1
+
+endfunction
+
 " }}}1
 
 " Functions {{{1
@@ -432,14 +439,29 @@ function! s:_pursuit_apply(bang)
     call s:_pursuit_apply_syntax(1)
 endfunction
 
+function! s:_follow_link()
+    if !s:is_pursuit_engine_loaded
+        call PursuitLoad()
+    endif
+    :python3 pursuit.follow_link()
+endfunction
+
+function! s:_pop_link()
+    if !s:is_pursuit_engine_loaded
+        call PursuitLoad()
+    endif
+    :python3 pursuit.pop_link()
+endfunction
+
+
 " }}}1
 
 " Commands {{{1
 " ============================================================================
 
 " Core Commands
-command! -nargs=? PursuitFollowLink :python3 pursuit.follow_link(<f-args>)
-command! -nargs=? PursuitReturnFromLink :python3 pursuit.pop_link(<f-args>)
+command! -nargs=? PursuitFollowLink :call s:_follow_link()
+command! -nargs=? PursuitReturnFromLink :call s:_pop_link()
 command! PursuitFindLinkNext :call s:_pursuit_find_next_link()
 command! PursuitFindLinkPrev :call s:_pursuit_find_prev_link()
 
