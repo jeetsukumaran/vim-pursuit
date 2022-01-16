@@ -58,6 +58,10 @@ let s:is_pursuit_engine_loaded = 0
 
 function! PursuitLoad()
 
+if s:is_pursuit_engine_loaded
+    return
+endif
+
 python3 << EOF
 
 import collections
