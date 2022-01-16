@@ -119,7 +119,7 @@ class Pursuit(object):
             self._info("Link stack is empty")
             return
         if vim_split_policy is None:
-            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = vim.eval("g:pursuit_default_vim_split_policy")
         if vim_split_policy == "vertical":
             vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
@@ -218,7 +218,7 @@ class Pursuit(object):
             self._error("Anchor not found: {}".format(target))
             raise LinkStackNoSaveException()
         if vim_split_policy is None:
-            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = "none"
         if vim_split_policy == "vertical":
             vim_cmd = ":vert sb"
         elif vim_split_policy == "horizontal":
@@ -246,7 +246,7 @@ class Pursuit(object):
         path, anchor, line_nr = self.parse_link_spec(target)
         path = path.replace(' ', '\\ ')
         if vim_split_policy is None:
-            vim_split_policy = "none" # vim.eval("pursuit_default_vim_split_policy")
+            vim_split_policy = vim.eval("g:pursuit_default_vim_split_policy")
         vim_cmd = []
         if vim_split_policy == "vertical":
             vim_cmd = "vsp"
